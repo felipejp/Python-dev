@@ -1,74 +1,42 @@
-def grab_interfaces(file):
-    pass
-    
-def get_BW(string):
+import json
+import analyzer
+from os.path import exists
+import time
 
-    i = string.find(" ")
-    j = string.find("M")
+with open("Network elements.json", "r") as network_elements:
 
-    aux_str = string[i:j]
+    aux_str = network_elements.read()
+    global ne
+    ne = json.loads(aux_str)
+  
+with open("report.csv","w") as file:
     
-    return aux_str
-
-with open("C:\\Users\\fbova\\Desktop\\Tacanitas.log","r") as file_config:
-
-    config_of_interface = []
-    list_of_interfaces = []
+    file.write("\"" + "Reporte de configuracion en interfaces - Ingenieria IP\"\n")
+    file.write("\"" + time.strftime("%c") + "\"\n")
+    file.write("\n")
+    file.write("\"Acronimo\",\"Internet\",\"Lan2Lan\",\"Multicast\",\"Trebol\",\"Total BW\"\n")
     
-    INTERNET = []
-    PW = []
-    Multicast = []
+with open("errors.csv","w") as file:
     
-    is_internet = False;
-    is_pw = False;
-    is_multicast = False;
+    file.write("\"" + "Reporte de configuracion en interfaces - Ingenieria IP\"\n")
+    file.write("\"" + time.strftime("%c") + "\"\n")
+    file.write("\n")
+    file.write("\"Acronimo\",\"Interface sin config de BW\"\n")
+  
+for router in ne:
     
-    BW = 0
+    #file_exists = exists("report.csv")
+    
+    #if not(file_exists):
+    router_list = analyzer.analyzer(ne[router]) 
+    
+    with open("report.csv","a") as f1:
+        f1.write(router_list[0] + "\n")
         
-    for line in file_config:
-        
-        if(line.find("GigabitEthernet")>0):
+    if(len(router_list) > 1):
+        with open("errors.csv","a") as f2:
+            f2.write(analyzer.analyzer(ne[router])[1] + "\n")
+    #print(analyzer.analyzer(ne[router]))
 
-            aux_str = str(line).strip()
-            config_of_interface.append(aux_str)
-            while(aux_str != '#'):
-                
-               #print(aux_str)
-               aux_str = file_config.readline().strip()
-               config_of_interface.append(aux_str)
-               
-            aux_list = list(config_of_interface)
-            list_of_interfaces.append(aux_list)
-            config_of_interface.clear()
-    
-    for interface in list_of_interfaces:
-    
-        for parameter in interface:
-        
-            if(parameter.find("INTERNET")>0):
-            
-                is_internet = True;
-                
-            if(parameter.find("mpls l2vc")==0):
-            
-                is_pw = True;
-            
-            elif(parameter.find("qos-profile")==0):
-            
-                    BW = int(get_BW(parameter))
-                    break
-            
-        if(is_internet):
-            INTERNET.append(BW)
-            is_internet = False
-        elif(is_pw):
-            PW.append(BW)
-            is_pw = False
-            
-    print("Internet configurado")
-    print(sum(INTERNET))
-    print("Pseudowires confugurados")
-    print(sum(PW))
-
-         
+     
 
